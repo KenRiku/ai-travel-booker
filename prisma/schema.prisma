@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String
+  passwordHash    String
+  seatPreference  String?
+  hotelStyle      String?
+  flightTime      String?
+  budgetRange     String?
+  onboardingDone  Boolean          @default(false)
+  isPremium       Boolean          @default(false)
+  loyaltyPrograms LoyaltyProgram[]
+  creditCards     CreditCard[]
+  conversations   Conversation[]
+  trips           Trip[]
+  createdAt       DateTime         @default(now())
+}
+
+model LoyaltyProgram {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  accountId String?
+  balance   Int     @default(0)
+}
+
+model CreditCard {
+  id               String  @id @default(cuid())
+  userId           String
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  travelMultiplier Float   @default(1.0)
+  diningMultiplier Float   @default(1.0)
+  hotelMultiplier  Float   @default(1.0)
+  annualCredit     Float   @default(0)
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  tripId    String?
+  trip      Trip?     @relation(fields: [tripId], references: [id])
+  createdAt DateTime  @default(now())
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  itineraryJson  Json?
+  createdAt      DateTime     @default(now())
+}
+
+model Trip {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  destination   String
+  startDate     DateTime?
+  endDate       DateTime?
+  itineraryJson Json
+  status        String         @default("draft")
+  conversations Conversation[]
+  createdAt     DateTime       @default(now())
+}
